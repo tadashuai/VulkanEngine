@@ -1,0 +1,8 @@
+[submodule "VulkanEngine/vendor/GLFW"]
+	path = VulkanEngine/vendor/GLFW
+	url = https://github.com/tadashuai/glfw
+	branch = master
+[submodule "VulkanEngine/vendor/GLM"]
+	path = VulkanEngine/vendor/GLM
+	url = https://github.com/tadashuai/glm
+	branch = master
