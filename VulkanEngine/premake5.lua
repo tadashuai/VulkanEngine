@@ -1,11 +1,14 @@
 project "VulkanEngine"
-	kind "ConsoleApp"
+	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+
+	pchheader "vepch.h"
+	pchsource "src/vepch.cpp"
 
 	files
 	{
@@ -23,9 +26,16 @@ project "VulkanEngine"
 
 	includedirs
 	{
+		"src",
+		"vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.GLM}",
 		"%{IncludeDir.VulkanSDK}"
+	}
+	
+	links
+	{
+		"GLFW"
 	}
 
 	filter "system:windows"

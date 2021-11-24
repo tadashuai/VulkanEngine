@@ -3,7 +3,7 @@ include "Dependencies.lua"
 workspace "VulkanEngine"
 	architecture "x86_64"
 
-	startproject "VulkanEngine"
+	startproject "VulkanEngineEditor"
 
 	configurations
 	{
@@ -24,3 +24,4 @@ group "Dependencies"
 group ""
 
 include "VulkanEngine"
+include "VulkanEngineEditor"

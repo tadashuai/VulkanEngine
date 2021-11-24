@@ -6,3 +6,7 @@
 	path = VulkanEngine/vendor/GLM
 	url = https://github.com/tadashuai/glm
 	branch = master
+[submodule "VulkanEngine/vendor/spdlog"]
+	path = VulkanEngine/vendor/spdlog
+	url = https://github.com/gabime/spdlog
+	branch = v1.x
