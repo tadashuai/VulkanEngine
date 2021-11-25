@@ -52,6 +52,9 @@ namespace VE
 
 		m_Window = glfwCreateWindow( ( int )m_Specification.Width, ( int )m_Specification.Height, m_Data.Title.c_str(), nullptr, nullptr );
 
+		m_VulkanInstance = CreateRef<VulkanInstance>();
+		m_VulkanInstance->Init();
+
 		glfwSetWindowUserPointer( m_Window, &m_Data );
 
 		{

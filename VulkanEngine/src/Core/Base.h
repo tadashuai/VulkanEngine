@@ -52,6 +52,7 @@ namespace VE
 }
 
 #include "Core/Log.h"
+#include <filesystem>
 
 #ifdef VE_ENABLE_ASSERTS
 	#define VE_INTERNAL_ASSERT_IMPL(type, check, msg, ...) { if(!(check)) { VE##type##ERROR(msg, __VA_ARGS__); VE_DEBUGBREAK(); } }

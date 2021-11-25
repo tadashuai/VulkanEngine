@@ -4,6 +4,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include "Platform/Vulkan/VulkanInstance.h"
+
 namespace VE
 {
 	class WindowsWindow : public Window
@@ -60,5 +62,7 @@ namespace VE
 		};
 
 		WindowData m_Data;
+
+		Ref<VulkanInstance> m_VulkanInstance;
 	};
 }
