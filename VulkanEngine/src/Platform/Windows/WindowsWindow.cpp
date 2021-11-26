@@ -55,15 +55,107 @@ namespace VE
 		m_VulkanInstance = CreateRef<VulkanInstance>();
 		m_VulkanInstance->Init();
 
+		m_SwapChain.Init( VulkanInstance::GetInstance(), m_VulkanInstance->GetDevice() );
+		m_SwapChain.CreateSurface( m_Window );
+
+		uint32_t width = m_Data.Width, height = m_Data.Height;
+		m_SwapChain.Create( &width, &height, m_Specification.VSync );
+
 		glfwSetWindowUserPointer( m_Window, &m_Data );
 
-		{
-			int width, height;
-			glfwGetWindowSize( m_Window, &width, &height );
-			m_Data.Width = width;
-			m_Data.Height = height;
-		}
+		glfwSetWindowSizeCallback( m_Window, []( GLFWwindow* window, int width, int height )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
 
+				WindowResizeEvent event( ( uint32_t )width, ( uint32_t )height );
+				data.EventCallback( event );
+				data.Width = width;
+				data.Height = height;
+			} );
+
+		glfwSetWindowCloseCallback( m_Window, []( GLFWwindow* window )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
+
+				WindowCloseEvent event;
+				data.EventCallback( event );
+			} );
+
+		glfwSetKeyCallback( m_Window, []( GLFWwindow* window, int key, int scancode, int action, int mods )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
+
+				switch ( action )
+				{
+					case GLFW_PRESS:
+						{
+							KeyPressedEvent event( ( KeyCode )key, 0 );
+							data.EventCallback( event );
+							break;
+						}
+					case GLFW_RELEASE:
+						{
+							KeyReleasedEvent event( ( KeyCode )key );
+							data.EventCallback( event );
+							break;
+						}
+					case GLFW_REPEAT:
+						{
+							KeyPressedEvent event( ( KeyCode )key, 1 );
+							data.EventCallback( event );
+							break;
+						}
+				}
+			} );
+
+		glfwSetCharCallback( m_Window, []( GLFWwindow* window, uint32_t codepoint )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
+
+				KeyTypedEvent event( ( KeyCode )codepoint );
+				data.EventCallback( event );
+			} );
+
+		glfwSetMouseButtonCallback( m_Window, []( GLFWwindow* window, int button, int action, int mods )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
+
+				switch ( action )
+				{
+					case GLFW_PRESS:
+						{
+							MouseButtonPressedEvent event( button );
+							data.EventCallback( event );
+							break;
+						}
+					case GLFW_RELEASE:
+						{
+							MouseButtonReleasedEvent event( button );
+							data.EventCallback( event );
+							break;
+						}
+				}
+			} );
+
+		glfwSetScrollCallback( m_Window, []( GLFWwindow* window, double xOffset, double yOffset )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
+
+				MouseScrolledEvent event( ( float )xOffset, ( float )yOffset );
+				data.EventCallback( event );
+			} );
+
+		glfwSetCursorPosCallback( m_Window, []( GLFWwindow* window, double x, double y )
+			{
+				auto& data = *( ( WindowData* )glfwGetWindowUserPointer( window ) );
+				MouseMovedEvent event( ( float )x, ( float )y );
+				data.EventCallback( event );
+			} );
+
+		int width, height;
+		glfwGetWindowSize( m_Window, &width, &height );
+		m_Data.Width = width;
+		m_Data.Height = height;
 	}
 
 	void WindowsWindow::ProcessEvents()
@@ -95,6 +187,8 @@ namespace VE
 
 	void WindowsWindow::Shutdown()
 	{
+		m_SwapChain.CleanUp();
+
 		glfwTerminate();
 		s_GLFWInitialized = false;
 	}

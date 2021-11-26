@@ -95,10 +95,6 @@ namespace VE
 		VE_ASSERT( m_DepthFormat );
 	}
 
-	VulkanPhysicalDevice::~VulkanPhysicalDevice()
-	{
-	}
-
 	bool VulkanPhysicalDevice::IsExtensionSupported( const std::string& extensionName ) const
 	{
 		return m_SupportedExtensions.find( extensionName ) != m_SupportedExtensions.end();
@@ -249,10 +245,6 @@ namespace VE
 		vkGetDeviceQueue( m_LogicalDevice, m_PhysicalDevice->m_QueueFamilyIndices.Compute, 0, &m_ComputeQueue );
 
 		CreateCommandPool();
-	}
-
-	VulkanLogicalDevice::~VulkanLogicalDevice()
-	{
 	}
 
 	void VulkanLogicalDevice::CreateCommandPool()

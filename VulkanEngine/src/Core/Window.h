@@ -2,6 +2,9 @@
 
 #include "Events/Event.h"
 
+#include "Platform/Vulkan/VulkanInstance.h"
+#include "Platform/Vulkan/VulkanSwapChain.h"
+
 namespace VE
 {
 	struct WindowSpecification
@@ -33,6 +36,9 @@ namespace VE
 		virtual void SetResizable( bool resizable ) const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
+
+		virtual Ref<VulkanInstance> GetVulkanInstance() = 0;
+		virtual VulkanSwapChain& GetSwapChain() = 0;
 
 		static Window* Create( const WindowSpecification& specification = WindowSpecification() );
 	};

@@ -2,9 +2,9 @@
 
 #include "Core/Window.h"
 
-#include <vulkan/vulkan.h>
+#include "Events/ApplicationEvent.h"
 
-int main( int args, char** argv );
+#include <vulkan/vulkan.h>
 
 namespace VE
 {
@@ -23,7 +23,10 @@ namespace VE
 		Application( const ApplicationSpecification& specification );
 		virtual ~Application();
 
+		void Run();
 		void Close();
+
+		virtual void OnEvent( Event& event );
 
 		Window& GetWindow()
 		{
@@ -41,17 +44,17 @@ namespace VE
 		}
 
 	private:
-		void Run();
-
-		Scope<Window> m_Window;
-		bool m_Running = true;
+		bool OnWindowResize( WindowResizeEvent& e );
+		bool OnWindowClose( WindowCloseEvent& e );
 
 	private:
+		Scope<Window> m_Window;
+		bool m_Running = true;
+		bool m_Minimized = false;
+
 		ApplicationSpecification m_Specification;
-		VkInstance instance;
 
 		static Application* s_Instance;
-		friend int ::main( int args, char** argv );
 	};
 
 	Application* CreateApplication( int argc, char** argv );

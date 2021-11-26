@@ -21,13 +21,16 @@ namespace VE
 		};
 
 		VulkanPhysicalDevice();
-		~VulkanPhysicalDevice();
 
 		bool IsExtensionSupported( const std::string& extensionName ) const;
 
 		VkPhysicalDevice GetVulkanPhysicalDevice() const
 		{
 			return m_PhysicalDevice;
+		}
+		const QueueFamilyIndices& GetQueueFamilyIndices() const
+		{
+			return m_QueueFamilyIndices;
 		}
 
 		static Ref<VulkanPhysicalDevice> Pick();
@@ -59,7 +62,6 @@ namespace VE
 	{
 	public:
 		VulkanLogicalDevice( const Ref<VulkanPhysicalDevice>& physicalDevice, VkPhysicalDeviceFeatures physicalDeviceFeatures );
-		~VulkanLogicalDevice();
 
 		void CreateCommandPool();
 		void Destroy();
@@ -73,7 +75,7 @@ namespace VE
 			return m_ComputeQueue;
 		}
 
-		VkDevice GetVulkantLogicalDevice() const
+		VkDevice GetVulkanLogicalDevice() const
 		{
 			return m_LogicalDevice;
 		}

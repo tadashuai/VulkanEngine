@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Platform/Vulkan/VulkanInstance.h"
+#include "Platform/Vulkan/VulkanSwapChain.h"
 
 namespace VE
 {
@@ -40,6 +41,15 @@ namespace VE
 		virtual bool IsVSync() const override;
 		virtual void SetResizable( bool resizable ) const override;
 
+		virtual Ref<VulkanInstance> GetVulkanInstance() override
+		{
+			return m_VulkanInstance;
+		}
+		virtual VulkanSwapChain& GetSwapChain() override
+		{
+			return m_SwapChain;
+		}
+
 		inline void* GetNativeWindow() const override
 		{
 			return m_Window;
@@ -64,5 +74,6 @@ namespace VE
 		WindowData m_Data;
 
 		Ref<VulkanInstance> m_VulkanInstance;
+		VulkanSwapChain m_SwapChain;
 	};
 }
