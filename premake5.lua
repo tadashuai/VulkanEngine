@@ -3,13 +3,12 @@ include "Dependencies.lua"
 workspace "VulkanEngine"
 	architecture "x86_64"
 
-	startproject "VulkanEngineEditor"
+	startproject "Testbed"
 
 	configurations
 	{
 		"Debug",
-		"Release",
-		"Dist"
+		"Release"
 	}
 
 	flags
@@ -24,4 +23,4 @@ group "Dependencies"
 group ""
 
 include "VulkanEngine"
-include "VulkanEngineEditor"
+include "Testbed"

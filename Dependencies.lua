@@ -7,15 +7,17 @@ VULKAN_SDK = os.getenv("VULKAN_SDK")
 IncludeDir = {}
 IncludeDir["GLFW"]			= "%{wks.location}/VulkanEngine/vendor/GLFW/include"
 IncludeDir["GLM"]			= "%{wks.location}/VulkanEngine/vendor/GLM"
+IncludeDir["spdlog"]		= "%{wks.location}/VulkanEngine/vendor/spdlog/include"
+IncludeDir["stb_image"] 	= "%{wks.location}/VulkanEngine/vendor/stb_image"
+IncludeDir["VMA"]			= "%{wks.location}/VulkanEngine/vendor/VulkanMemoryAllocator"
 IncludeDir["VulkanSDK"]		= "%{VULKAN_SDK}/Include"
 
 LibraryDir = {}
-
 LibraryDir["VulkanSDK"]				= "%{VULKAN_SDK}/Lib"
 LibraryDir["VulkanSDK_Debug"]		= "%{wks.location}/VulkanEngine/vendor/VulkanSDK/Lib"
 LibraryDir["VulkanSDK_DebugDLL"]	= "%{wks.location}/VulkanEngine/vendor/VulkanSDK/Bin"
 
-LibraryDir["GLFW3Lib"]				= "F:/Documents/Visual Studio/Libraries/glfw-3.3.5.bin.WIN64/lib-vc2019"
+LibraryDir["GLFW3Lib"]				= "%{wks.location}/VulkanEngine/vendor/GLFW3"
 
 Library = {}
 Library["Vulkan"]					= "%{LibraryDir.VulkanSDK}/vulkan-1.lib"

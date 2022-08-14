@@ -5,6 +5,8 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
+#include "Platform/Vulkan/VulkanGraphicsContext.h"
+
 namespace VE
 {
 
@@ -14,12 +16,6 @@ namespace VE
 	}
 
 	static bool s_GLFWInitialized = false;
-
-
-	Window* Window::Create( const WindowSpecification& specification )
-	{
-		return new WindowsWindow( specification );
-	}
 
 	WindowsWindow::WindowsWindow( const WindowSpecification& specification )
 		: m_Specification( specification )
@@ -52,10 +48,12 @@ namespace VE
 
 		m_Window = glfwCreateWindow( ( int )m_Specification.Width, ( int )m_Specification.Height, m_Data.Title.c_str(), nullptr, nullptr );
 
-		m_VulkanInstance = CreateRef<VulkanInstance>();
-		m_VulkanInstance->Init();
+		m_GraphicsContext = GraphicsContext::Create();
+		m_GraphicsContext->Init();
 
-		m_SwapChain.Init( VulkanInstance::GetInstance(), m_VulkanInstance->GetDevice() );
+		Ref<VulkanGraphicsContext> vulkanGraphicsContext = m_GraphicsContext.As<VulkanGraphicsContext>();
+
+		m_SwapChain.Init( vulkanGraphicsContext->GetLogicalDevice() );
 		m_SwapChain.CreateSurface( m_Window );
 
 		uint32_t width = m_Data.Width, height = m_Data.Height;
@@ -89,7 +87,7 @@ namespace VE
 				{
 					case GLFW_PRESS:
 						{
-							KeyPressedEvent event( ( KeyCode )key, 0 );
+							KeyPressedEvent event( ( KeyCode )key );
 							data.EventCallback( event );
 							break;
 						}
@@ -101,7 +99,7 @@ namespace VE
 						}
 					case GLFW_REPEAT:
 						{
-							KeyPressedEvent event( ( KeyCode )key, 1 );
+							KeyPressedEvent event( ( KeyCode )key, true );
 							data.EventCallback( event );
 							break;
 						}
@@ -152,10 +150,12 @@ namespace VE
 				data.EventCallback( event );
 			} );
 
-		int width, height;
-		glfwGetWindowSize( m_Window, &width, &height );
-		m_Data.Width = width;
-		m_Data.Height = height;
+		{
+			int width, height;
+			glfwGetWindowSize( m_Window, &width, &height );
+			m_Data.Width = width;
+			m_Data.Height = height;
+		}
 	}
 
 	void WindowsWindow::ProcessEvents()
@@ -188,6 +188,8 @@ namespace VE
 	void WindowsWindow::Shutdown()
 	{
 		m_SwapChain.CleanUp();
+		m_GraphicsContext->Shutdown();
+		m_GraphicsContext = nullptr;
 
 		glfwTerminate();
 		s_GLFWInitialized = false;

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Events/Event.h"
-
-#include "Platform/Vulkan/VulkanInstance.h"
-#include "Platform/Vulkan/VulkanSwapChain.h"
+#include "Renderer/GraphicsContext.h"
 
 namespace VE
 {
+	class VulkanSwapChain;
+
 	struct WindowSpecification
 	{
 		std::string Title = "Vulkan Engine";
@@ -37,9 +37,9 @@ namespace VE
 
 		virtual void* GetNativeWindow() const = 0;
 
-		virtual Ref<VulkanInstance> GetVulkanInstance() = 0;
+		virtual Ref<GraphicsContext> GetGraphicsContext() = 0;
 		virtual VulkanSwapChain& GetSwapChain() = 0;
 
-		static Window* Create( const WindowSpecification& specification = WindowSpecification() );
+		static Scope<Window> Create( const WindowSpecification& specification = WindowSpecification() );
 	};
 }

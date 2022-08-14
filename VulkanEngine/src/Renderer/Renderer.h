@@ -1,12 +1,27 @@
 #pragma once
 
+#include "Core/Application.h"
+
+#include "Renderer/GraphicsContext.h"
+
 namespace VE
 {
-
-#define  MAX_FRAMES_IN_FLIGHT 3
+	struct RendererConfig
+	{
+		uint32_t MaxFramesInFlight = 3;
+	};
 
 	class Renderer
 	{
+	public:
+		static void Init();
+		static void Shutdown();
 
+		static Ref<GraphicsContext> GetContext()
+		{
+			return Application::Get().GetWindow().GetGraphicsContext();
+		}
+
+		static RendererConfig& GetConfig();
 	};
 }

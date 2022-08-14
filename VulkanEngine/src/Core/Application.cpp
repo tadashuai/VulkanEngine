@@ -1,6 +1,10 @@
 #include "vepch.h"
 #include "Core/Application.h"
 
+#include "Renderer/Renderer.h"
+
+#include "Platform/Vulkan/VulkanSwapChain.h"
+
 #include <GLFW/glfw3.h>
 
 namespace VE
@@ -19,16 +23,21 @@ namespace VE
 		windowSepcification.Width = specification.WindowWidth;
 		windowSepcification.Height = specification.WindowHeight;
 		windowSepcification.VSync = specification.VSync;
-		m_Window = std::unique_ptr<Window>( Window::Create( windowSepcification ) );
+		m_Window = Window::Create( windowSepcification );
 		m_Window->Init();
 		m_Window->SetEventCallback( [this]( Event& e ) { return OnEvent( e ); } );
 		m_Window->SetResizable( specification.Resizable );
 		m_Window->SetVSync( false );
+
+		Renderer::Init();
+		//Renderer::WaitCommandQueueExecute();
 	}
 
 	Application::~Application()
 	{
 		m_Window->SetEventCallback( []( Event& e ) {} );
+
+		Renderer::Shutdown();
 	}
 
 	void Application::Close()
@@ -46,21 +55,31 @@ namespace VE
 	bool Application::OnWindowResize( WindowResizeEvent& e )
 	{
 		const uint32_t width = e.GetWidth(), height = e.GetHeight();
+
+		if ( width == m_Window->GetWidth() && height == m_Window->GetHeight() )
+			return false;
+
 		if ( width == 0 || height == 0 )
 		{
+			VE_INFO( "Window minimized, suspending application." );
 			m_Minimized = true;
 			return false;
 		}
-		m_Minimized = false;
 
-		m_Window->GetSwapChain().OnResize( width, height );
+		if ( m_Minimized )
+		{
+			VE_INFO( "Window restored, resuming application." );
+			m_Minimized = false;
+		}
+
+		m_Window->GetSwapChain().Recreate( width, height );
 
 		return false;
 	}
 
 	bool Application::OnWindowClose( WindowCloseEvent& e )
 	{
-		Close();
+		m_Running = false;
 		return true;
 	}
 
@@ -72,7 +91,11 @@ namespace VE
 
 			if ( !m_Minimized )
 			{
-				m_Window->GetSwapChain().DrawFrame();
+				if ( m_Window->GetSwapChain().BeginFrame() )
+				{
+					//Renderer::WaitCommandQueueExecute();
+					m_Window->GetSwapChain().EndFrame();
+				}
 			}
 		}
 	}

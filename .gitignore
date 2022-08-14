@@ -2,6 +2,9 @@
 **/bin/
 bin-int/
 
+# Log
+*.log
+
 # Visual Studio files and folder
 .vs/
 **.sln
@@ -11,3 +14,4 @@ bin-int/
 
 # Directories
 VulkanEngine/vendor/VulkanSDK
+scripts/__pycache__

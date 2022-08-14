@@ -14,8 +14,13 @@ project "VulkanEngine"
 	{
 		"src/**.h",
 		"src/**.cpp",
+		"vendor/stb_image/**.h",
+		"vendor/stb_image/**.cpp",
 		"vendor/GLM/glm/**.hpp",
 		"vendor/GLM/glm/**.inl",
+		
+		"vendor/VulkanMemoryAllocator/**.h",
+		"vendor/VulkanMemoryAllocator/**.cpp"
 	}
 
 	defines
@@ -27,23 +32,25 @@ project "VulkanEngine"
 	includedirs
 	{
 		"src",
-		"vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.GLM}",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.VMA}",
 		"%{IncludeDir.VulkanSDK}"
 	}
 	
 	links
 	{
-		"GLFW"
+		"opengl32.lib",
+		
+		"%{Library.Vulkan}",
+		"%{Library.VulkanUtils}",
+		"%{Library.GLFW3}"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
-
-		defines
-		{
-		}
 
 	filter "configurations:Debug"
 		defines "VE_DEBUG"
@@ -55,8 +62,7 @@ project "VulkanEngine"
 			"%{Library.ShaderC_Debug}",
 			"%{Library.SPIRV_Cross_Debug}",
 			"%{Library.SPIRV_Cross_GLSL_Debug}",
-			"%{Library.Vulkan}",
-			"%{Library.GLFW3}"
+			"%{Library.SPIRV_Tools_Debug}"
 		}
 
 	filter "configurations:Release"
@@ -68,21 +74,5 @@ project "VulkanEngine"
 		{
 			"%{Library.ShaderC_Release}",
 			"%{Library.SPIRV_Cross_Release}",
-			"%{Library.SPIRV_Cross_GLSL_Release}",
-			"%{Library.Vulkan}",
-			"%{Library.GLFW3}"
-		}
-
-	filter "configurations:Dist"
-		defines "VE_DIST"
-		runtime "Release"
-		optimize "on"
-		
-		links
-		{
-			"%{Library.ShaderC_Release}",
-			"%{Library.SPIRV_Cross_Release}",
-			"%{Library.SPIRV_Cross_GLSL_Release}",
-			"%{Library.Vulkan}",
-			"%{Library.GLFW3}"
+			"%{Library.SPIRV_Cross_GLSL_Release}"
 		}

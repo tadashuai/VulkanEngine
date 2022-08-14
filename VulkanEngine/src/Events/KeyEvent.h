@@ -25,29 +25,30 @@ namespace VE
 		KeyCode m_KeyCode;
 	};
 
-	class KeyPressedEvent : public KeyEvent
+class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent( KeyCode keycode, int repeatCount )
-			: KeyEvent( keycode ), m_RepeatCount( repeatCount )
+		KeyPressedEvent( const KeyCode keycode, const bool isRepeat = false )
+			: KeyEvent( keycode ), m_IsRepeat( isRepeat )
 		{
 		}
 
-		inline int GetRepeatCount() const
+		bool IsRepeat() const
 		{
-			return m_RepeatCount;
+			return m_IsRepeat;
 		}
 
 		std::string ToString() const override
 		{
 			std::stringstream ss;
-			ss << "KeyPressedEvent: " << m_KeyCode << " (" << m_RepeatCount << " repeats)";
+			ss << "KeyPressedEvent: " << m_KeyCode << "( repeat = " << m_IsRepeat << " )";
 			return ss.str();
 		}
 
 		EVENT_CLASS_TYPE( KeyPressed );
+
 	private:
-		int m_RepeatCount;
+		bool m_IsRepeat;
 	};
 
 	class KeyReleasedEvent : public KeyEvent

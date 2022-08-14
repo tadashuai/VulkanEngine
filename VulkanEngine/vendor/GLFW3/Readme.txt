@@ -1,0 +1,1 @@
+this glfw3.lib file is supported to VS2019!

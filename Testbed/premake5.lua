@@ -1,4 +1,4 @@
-project "VulkanEngineEditor"
+project "Testbed"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
@@ -15,10 +15,12 @@ project "VulkanEngineEditor"
 
 	includedirs
 	{
-		"%{wks.location}/VulkanEngine/vendor/spdlog/include",
 		"%{wks.location}/VulkanEngine/src",
-		"%{wks.location}/VulkanEngine/vendor",
-		"%{IncludeDir.GLM}"
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.GLM}",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.VulkanSDK}"
 	}
 
 	links
@@ -41,10 +43,5 @@ project "VulkanEngineEditor"
 
 	filter "configurations:Release"
 		defines "VE_RELEASE"
-		runtime "Release"
-		optimize "on"
-
-	filter "configurations:Dist"
-		defines "VE_DIST"
 		runtime "Release"
 		optimize "on"

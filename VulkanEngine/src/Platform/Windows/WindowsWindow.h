@@ -2,10 +2,9 @@
 
 #include "Core/Window.h"
 
-#include <GLFW/glfw3.h>
-
-#include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/Vulkan/VulkanSwapChain.h"
+
+#include <GLFW/glfw3.h>
 
 namespace VE
 {
@@ -41,9 +40,9 @@ namespace VE
 		virtual bool IsVSync() const override;
 		virtual void SetResizable( bool resizable ) const override;
 
-		virtual Ref<VulkanInstance> GetVulkanInstance() override
+		virtual Ref<GraphicsContext> GetGraphicsContext() override
 		{
-			return m_VulkanInstance;
+			return m_GraphicsContext;
 		}
 		virtual VulkanSwapChain& GetSwapChain() override
 		{
@@ -70,10 +69,9 @@ namespace VE
 
 			EventCallbackFn EventCallback;
 		};
-
 		WindowData m_Data;
 
-		Ref<VulkanInstance> m_VulkanInstance;
+		Ref<GraphicsContext> m_GraphicsContext;
 		VulkanSwapChain m_SwapChain;
 	};
 }
