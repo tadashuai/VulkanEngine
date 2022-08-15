@@ -6,6 +6,7 @@
 namespace VE
 {
 	VulkanRenderPass::VulkanRenderPass( const RenderPassSpecification& specification )
+		: m_Specification( specification )
 	{
 		Create();
 	}

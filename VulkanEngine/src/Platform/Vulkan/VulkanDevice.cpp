@@ -316,7 +316,7 @@ namespace VE
 		vkDestroyCommandPool( m_LogicalDevice, m_GraphicsCommandPool, VulkanGraphicsContext::GetAllocator() );
 		VE_INFO( "Graphics command pool destroyed." );
 		vkDestroyCommandPool( m_LogicalDevice, m_ComputeCommandPool, VulkanGraphicsContext::GetAllocator() );
-		VE_INFO( "Graphics command pool destroyed." );
+		VE_INFO( "Compute command pool destroyed." );
 
 		vkDeviceWaitIdle( m_LogicalDevice );
 		vkDestroyDevice( m_LogicalDevice, VulkanGraphicsContext::GetAllocator() );
