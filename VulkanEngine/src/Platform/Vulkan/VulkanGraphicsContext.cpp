@@ -58,7 +58,7 @@ namespace VE
 		deviceFeatures.fillModeNonSolid = VK_TRUE;
 		m_LogicalDevice = Ref<VulkanLogicalDevice>::Create( m_PhysicalDevice, deviceFeatures );
 
-		VulkanAllocator::Init( m_LogicalDevice );
+		VulkanAllocator::Init();
 
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo{};
 		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;

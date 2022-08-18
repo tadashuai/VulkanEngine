@@ -73,7 +73,7 @@ namespace VE
 		vkDeviceWaitIdle( device );
 
 		// Clear these out just in case.
-		m_ImageInFlightFences.resize( m_SwapChainImages.size(), VK_NULL_HANDLE );
+		m_ImageInFlightFences.resize( m_ImageCount, VK_NULL_HANDLE );
 
 		CleanUpSwapChain();
 
@@ -429,16 +429,20 @@ namespace VE
 
 	void VulkanSwapChain::CreateImageViews()
 	{
-		m_SwapChainBuffers.resize( m_ImageCount );
+		m_RenderImages.resize( m_ImageCount );
+		ImageSpecification imageSpecification = {};
 
-		for ( size_t i = 0; i < m_ImageCount; i++ )
+		for ( size_t i = 0; i < m_RenderImages.size(); i++ )
 		{
-			m_SwapChainBuffers[ i ].Image = m_SwapChainImages[ i ];
+			imageSpecification.Name = "__Swapchain_Render_Image_" + std::to_string( i ) + "__";
+			m_RenderImages[ i ] = Ref<VulkanImage>::Create( imageSpecification );
+			auto& imageInfo = m_RenderImages[ i ]->GetImageInfo();
+			imageInfo.Image = m_SwapChainImages[ i ];
 
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			createInfo.pNext = nullptr;
-			createInfo.image = m_SwapChainBuffers[ i ].Image;
+			createInfo.image = m_SwapChainImages[ i ];
 			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			createInfo.format = m_SwapChainImageFormat;
 			createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
@@ -452,7 +456,7 @@ namespace VE
 			createInfo.subresourceRange.layerCount = 1;
 			createInfo.flags = 0;
 
-			VK_CHECK_RESULT( vkCreateImageView( m_LogicalDevice->GetVulkanLogicalDevice(), &createInfo, VulkanGraphicsContext::GetAllocator(), &m_SwapChainBuffers[ i ].ImageView ) );
+			VK_CHECK_RESULT( vkCreateImageView( m_LogicalDevice->GetVulkanLogicalDevice(), &createInfo, VulkanGraphicsContext::GetAllocator(), &imageInfo.ImageView ) );
 		}
 
 		// Create depth attachment
@@ -495,7 +499,7 @@ namespace VE
 	{
 		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
 
-		m_SwapChainFramebuffers.resize( m_SwapChainBuffers.size() );
+		m_SwapChainFramebuffers.resize( m_ImageCount );
 
 		VkImageView attachments[ 1 ];
 
@@ -509,9 +513,9 @@ namespace VE
 		framebufferInfo.height = m_Height;
 		framebufferInfo.layers = 1;
 
-		for ( size_t i = 0; i < m_SwapChainBuffers.size(); i++ )
+		for ( size_t i = 0; i < m_SwapChainFramebuffers.size(); i++ )
 		{
-			attachments[ 0 ] = m_SwapChainBuffers[ i ].ImageView;
+			attachments[ 0 ] = m_RenderImages[ i ]->GetImageInfo().ImageView;
 			VK_CHECK_RESULT( vkCreateFramebuffer( logicalDevice, &framebufferInfo, VulkanGraphicsContext::GetAllocator(), &m_SwapChainFramebuffers[ i ] ) );
 		}
 	}
@@ -534,7 +538,7 @@ namespace VE
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = m_CommandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = ( uint32_t )m_CommandBuffers.size();
+		allocInfo.commandBufferCount = m_ImageCount;
 
 		VK_CHECK_RESULT( vkAllocateCommandBuffers( m_LogicalDevice->GetVulkanLogicalDevice(), &allocInfo, m_CommandBuffers.data() ) );
 	}
@@ -545,7 +549,7 @@ namespace VE
 		m_WaitSemaphores.resize( frames );
 		m_SignalSemaphores.resize( frames );
 		m_WaitInFlightFences.resize( frames );
-		m_ImageInFlightFences.resize( m_SwapChainImages.size(), VK_NULL_HANDLE );
+		m_ImageInFlightFences.resize( m_ImageCount, VK_NULL_HANDLE );
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -574,7 +578,7 @@ namespace VE
 		}
 		m_SwapChainFramebuffers.clear();
 
-		vkFreeCommandBuffers( device, m_CommandPool, static_cast< uint32_t >( m_CommandBuffers.size() ), m_CommandBuffers.data() );
+		vkFreeCommandBuffers( device, m_CommandPool, m_ImageCount, m_CommandBuffers.data() );
 		m_CommandBuffers.clear();
 
 		//if ( shutdown )
@@ -591,8 +595,11 @@ namespace VE
 
 		for ( uint32_t i = 0; i < m_ImageCount; i++ )
 		{
-			vkDestroyImageView( device, m_SwapChainBuffers[ i ].ImageView, VulkanGraphicsContext::GetAllocator() );
+			vkDestroyImageView( device, m_RenderImages[ i ]->GetImageInfo().ImageView, VulkanGraphicsContext::GetAllocator() );
+			m_RenderImages[ i ]->GetImageInfo().ImageView = VK_NULL_HANDLE;
+			m_RenderImages[ i ]->GetImageInfo().Image = VK_NULL_HANDLE;
 		}
+		m_RenderImages.clear();
 
 		vkDestroySwapchainKHR( device, m_SwapChain, VulkanGraphicsContext::GetAllocator() );
 	}

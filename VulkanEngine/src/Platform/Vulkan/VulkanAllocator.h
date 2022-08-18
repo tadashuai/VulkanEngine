@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Platform/Vulkan/VulkanDevice.h"
 #include "vk_mem_alloc.h"
 
 namespace VE
@@ -12,7 +11,7 @@ namespace VE
 		VulkanAllocator( const std::string& tag );
 		~VulkanAllocator() = default;
 
-		static void Init( Ref<VulkanLogicalDevice> device );
+		static void Init();
 		static void Shutdown();
 
 		VmaAllocation AllocateBuffer( VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage, VkBuffer& outBuffer );

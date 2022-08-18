@@ -2,6 +2,7 @@
 
 #include "Platform/Vulkan/VulkanDevice.h"
 #include "Platform/Vulkan/VulkanRenderPass.h"
+#include "Platform/Vulkan/VulkanImage.h"
 
 #include <GLFW/glfw3.h>
 
@@ -106,14 +107,9 @@ namespace VE
 		Ref<VulkanRenderPass> m_RenderPass;
 		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
-		struct SwapChainBuffer
-		{
-			VkImage Image;
-			VkImageView ImageView;
-		};
-		std::vector<SwapChainBuffer> m_SwapChainBuffers;
+		std::vector<Ref<VulkanImage>> m_RenderImages;
 
-		//Ref<VulkanImage2D> m_DepthAttachment;
+		//Ref<VulkanImage> m_DepthAttachment;
 
 		VkCommandPool m_CommandPool = nullptr;
 		std::vector<VkCommandBuffer> m_CommandBuffers;

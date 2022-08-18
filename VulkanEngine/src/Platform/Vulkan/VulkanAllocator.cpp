@@ -12,8 +12,10 @@ namespace VE
 	{
 	}
 
-	void VulkanAllocator::Init( Ref<VulkanLogicalDevice> device )
+	void VulkanAllocator::Init()
 	{
+		auto device = VulkanGraphicsContext::GetCurrentDevice();
+
 		VmaAllocatorCreateInfo allocatorInfo = {};
 		allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
 		allocatorInfo.physicalDevice = device->GetPhysicalDevice()->GetVulkanPhysicalDevice();
