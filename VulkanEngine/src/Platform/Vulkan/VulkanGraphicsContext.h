@@ -3,29 +3,23 @@
 #include "Platform/Vulkan/VulkanDevice.h"
 #include "Platform/Vulkan/VulkanCommandBuffer.h"
 
-#include "Renderer/GraphicsContext.h"
-#include "Renderer/Renderer.h"
-
 namespace VE
 {
-	class VulkanGraphicsContext : public GraphicsContext
+	class VulkanGraphicsContext : public ReferenceCount
 	{
 	public:
 		VulkanGraphicsContext() = default;
 		virtual ~VulkanGraphicsContext() = default;
 
-		virtual void Init() override;
-		virtual void Shutdown() override;
+		void Init();
+		void Shutdown();
 
 		Ref<VulkanLogicalDevice> GetLogicalDevice()
 		{
 			return m_LogicalDevice;
 		}
 
-		static Ref<VulkanGraphicsContext> Get()
-		{
-			return Ref<VulkanGraphicsContext>( Renderer::GetContext() );
-		}
+		static Ref<VulkanGraphicsContext> Get();
 		static Ref<VulkanLogicalDevice> GetCurrentDevice()
 		{
 			return Get()->GetLogicalDevice();

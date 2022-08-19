@@ -1,9 +1,5 @@
 #pragma once
 
-#include "Core/Application.h"
-
-#include "Renderer/GraphicsContext.h"
-
 namespace VE
 {
 	struct RendererConfig
@@ -18,11 +14,7 @@ namespace VE
 		static void Shutdown();
 
 		static bool DrawFrame();
-
-		static Ref<GraphicsContext> GetContext()
-		{
-			return Application::Get().GetWindow().GetGraphicsContext();
-		}
+		static void Resize( uint32_t width, uint32_t height );
 
 		static RendererConfig& GetConfig();
 	};

@@ -4,8 +4,6 @@
 #include "Platform/Vulkan/VulkanRenderPass.h"
 #include "Platform/Vulkan/VulkanImage.h"
 
-#include <GLFW/glfw3.h>
-
 namespace VE
 {
 	class VulkanSwapChain : public ReferenceCount
@@ -13,9 +11,8 @@ namespace VE
 	public:
 		VulkanSwapChain() = default;
 
-		void Init( const Ref<VulkanLogicalDevice>& logicalDevice );
-		void CreateSurface( GLFWwindow* window );
-		void Create( uint32_t* width, uint32_t* height, bool vsync );
+		void CreateSurface();
+		void Create( uint32_t width, uint32_t height, bool vsync );
 		void Recreate( uint32_t width, uint32_t height );
 
 		bool BeginFrame();
@@ -77,7 +74,7 @@ namespace VE
 		bool AcquireNextImageIndex();
 		void Present();
 
-		void CreateSwapChain( uint32_t* width, uint32_t* height, bool vsync );
+		void CreateSwapChain( uint32_t width, uint32_t height, bool vsync );
 		void CreateImageViews();
 		void CreateRenderPass();
 		void CreateFramebuffers();

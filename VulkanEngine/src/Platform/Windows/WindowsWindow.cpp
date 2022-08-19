@@ -5,8 +5,6 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
-#include "Platform/Vulkan/VulkanGraphicsContext.h"
-
 namespace VE
 {
 
@@ -32,8 +30,9 @@ namespace VE
 		m_Data.Title = m_Specification.Title;
 		m_Data.Width = m_Specification.Width;
 		m_Data.Height = m_Specification.Height;
+		m_Data.VSync = m_Specification.VSync;
 
-		VE_INFO( "Creating window {0} ({1}, {2})", m_Specification.Title, m_Specification.Width, m_Specification.Height );
+		VE_INFO( "Creating window {0} ({1}, {2})", m_Data.Title, m_Data.Width, m_Data.Height );
 
 		if ( !s_GLFWInitialized )
 		{
@@ -46,18 +45,7 @@ namespace VE
 
 		glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 
-		m_Window = glfwCreateWindow( ( int )m_Specification.Width, ( int )m_Specification.Height, m_Data.Title.c_str(), nullptr, nullptr );
-
-		m_GraphicsContext = GraphicsContext::Create();
-		m_GraphicsContext->Init();
-
-		Ref<VulkanGraphicsContext> vulkanGraphicsContext = m_GraphicsContext.As<VulkanGraphicsContext>();
-
-		m_SwapChain.Init( vulkanGraphicsContext->GetLogicalDevice() );
-		m_SwapChain.CreateSurface( m_Window );
-
-		uint32_t width = m_Data.Width, height = m_Data.Height;
-		m_SwapChain.Create( &width, &height, m_Specification.VSync );
+		m_Window = glfwCreateWindow( ( int )m_Data.Width, ( int )m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr );
 
 		glfwSetWindowUserPointer( m_Window, &m_Data );
 
@@ -187,10 +175,6 @@ namespace VE
 
 	void WindowsWindow::Shutdown()
 	{
-		m_SwapChain.CleanUp();
-		m_GraphicsContext->Shutdown();
-		m_GraphicsContext = nullptr;
-
 		glfwTerminate();
 		s_GLFWInitialized = false;
 	}

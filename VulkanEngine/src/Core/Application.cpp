@@ -72,7 +72,7 @@ namespace VE
 			m_Minimized = false;
 		}
 
-		m_Window->GetSwapChain().Recreate( width, height );
+		Renderer::Resize( width, height );
 
 		return false;
 	}

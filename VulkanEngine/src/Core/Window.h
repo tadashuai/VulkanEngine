@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Events/Event.h"
-#include "Renderer/GraphicsContext.h"
 
 namespace VE
 {
@@ -36,9 +35,6 @@ namespace VE
 		virtual void SetResizable( bool resizable ) const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
-
-		virtual Ref<GraphicsContext> GetGraphicsContext() = 0;
-		virtual VulkanSwapChain& GetSwapChain() = 0;
 
 		static Scope<Window> Create( const WindowSpecification& specification = WindowSpecification() );
 	};

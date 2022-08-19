@@ -2,7 +2,7 @@
 #include "Platform/Vulkan/VulkanGraphicsContext.h"
 
 #include "Platform/Vulkan/VulkanAllocator.h"
-#include "Platform/Vulkan/VulkanSwapChain.h"
+#include "Platform/Vulkan/VulkanBackend.h"
 
 #include "Core/Application.h"
 
@@ -89,9 +89,14 @@ namespace VE
 		VE_INFO( "Vulkan Instance destroyed." );
 	}
 
+	Ref<VulkanGraphicsContext> VulkanGraphicsContext::Get()
+	{
+		return Ref<VulkanGraphicsContext>( VulkanBackend::GetVulkanGraphicsContext() );
+	}
+
 	Ref<VulkanCommandBuffer>& VulkanGraphicsContext::GetCurrentCommandBuffer()
 	{
-		return GetCommandBuffer( Application::Get().GetWindow().GetSwapChain().GetCurrentImageIndex() );
+		return GetCommandBuffer( VulkanBackend::GetVulkanSwapChain()->GetCurrentImageIndex() );
 	}
 
 	void VulkanGraphicsContext::CreateVulkanInstance()

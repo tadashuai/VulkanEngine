@@ -2,8 +2,6 @@
 
 #include "Core/Window.h"
 
-#include "Platform/Vulkan/VulkanSwapChain.h"
-
 #include <GLFW/glfw3.h>
 
 namespace VE
@@ -40,15 +38,6 @@ namespace VE
 		virtual bool IsVSync() const override;
 		virtual void SetResizable( bool resizable ) const override;
 
-		virtual Ref<GraphicsContext> GetGraphicsContext() override
-		{
-			return m_GraphicsContext;
-		}
-		virtual VulkanSwapChain& GetSwapChain() override
-		{
-			return m_SwapChain;
-		}
-
 		inline void* GetNativeWindow() const override
 		{
 			return m_Window;
@@ -70,8 +59,5 @@ namespace VE
 			EventCallbackFn EventCallback;
 		};
 		WindowData m_Data;
-
-		Ref<GraphicsContext> m_GraphicsContext;
-		VulkanSwapChain m_SwapChain;
 	};
 }

@@ -3,20 +3,20 @@
 
 #include "Platform/Vulkan/VulkanGraphicsContext.h"
 
+#include "Core/Application.h"
 #include "Renderer/Renderer.h"
+
+#include <GLFW/glfw3.h>
 
 namespace VE
 {
-	void VulkanSwapChain::Init( const Ref<VulkanLogicalDevice>& logicalDevice )
+	void VulkanSwapChain::CreateSurface()
 	{
-		m_LogicalDevice = logicalDevice;
-	}
-
-	void VulkanSwapChain::CreateSurface( GLFWwindow* window )
-	{
+		GLFWwindow* window = static_cast< GLFWwindow* >( Application::Get().GetWindow().GetNativeWindow() );
 		glfwCreateWindowSurface( VulkanGraphicsContext::GetVulkanInstance(), window, VulkanGraphicsContext::GetAllocator(), &m_Surface );
 
-		auto physicalDevice = m_LogicalDevice->GetPhysicalDevice()->GetVulkanPhysicalDevice();
+		auto device = VulkanGraphicsContext::Get()->GetLogicalDevice();
+		auto physicalDevice = device->GetPhysicalDevice()->GetVulkanPhysicalDevice();
 
 		uint32_t queueFamilyCount;
 		vkGetPhysicalDeviceQueueFamilyProperties( physicalDevice, &queueFamilyCount, nullptr );
@@ -40,10 +40,10 @@ namespace VE
 			i++;
 		}
 		VE_ASSERT( presentQueueFamilyIndex != -1 );
-		m_LogicalDevice->SetPresentFamilyIndex( presentQueueFamilyIndex );
+		device->SetPresentFamilyIndex( presentQueueFamilyIndex );
 	}
 
-	void VulkanSwapChain::Create( uint32_t* width, uint32_t* height, bool vsync )
+	void VulkanSwapChain::Create( uint32_t width, uint32_t height, bool vsync )
 	{
 		CreateSwapChain( width, height, vsync );
 		CreateImageViews();
@@ -65,7 +65,7 @@ namespace VE
 		// Mark as recreating if the dimensions are valid.
 		m_IsRecreating = true;
 
-		auto device = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto device = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		// Wait for any operations to complete.
 		glfwWaitEvents();
@@ -76,7 +76,7 @@ namespace VE
 
 		CleanUpSwapChain();
 
-		CreateSwapChain( &width, &height, m_VSync );
+		CreateSwapChain( width, height, m_VSync );
 		CreateImageViews();
 		CreateRenderPass();
 		CreateFramebuffers();
@@ -88,12 +88,12 @@ namespace VE
 
 	bool VulkanSwapChain::BeginFrame()
 	{
-		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto device = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		// Check if recreating swap chain and boot out.
 		if ( m_IsRecreating )
 		{
-			VkResult result = vkDeviceWaitIdle( logicalDevice );
+			VkResult result = vkDeviceWaitIdle( device );
 			if ( !VK_RESULT_IS_SUCCESS( result ) )
 			{
 				VE_ERROR( "VulkanSwapChain::BeginFrame vkDeviceWaitIdle (1) failed: {0}", VKResultToString( result ) );
@@ -104,7 +104,7 @@ namespace VE
 		}
 
 		// Wait for the execution of the current frame to complete. The fence being free will allow this one to move on.
-		VkResult result = vkWaitForFences( logicalDevice, 1, &m_WaitInFlightFences[ m_CurrentFrameIndex ], VK_TRUE, UINT64_MAX );
+		VkResult result = vkWaitForFences( device, 1, &m_WaitInFlightFences[ m_CurrentFrameIndex ], VK_TRUE, UINT64_MAX );
 		if ( !VK_RESULT_IS_SUCCESS( result ) )
 		{
 			VE_CRITICAL( "In-flight fence wait failure!" );
@@ -158,8 +158,9 @@ namespace VE
 		auto& commandBuffer = VulkanGraphicsContext::GetCurrentCommandBuffer();
 		commandBuffer->End();
 
-		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
-		auto graphicsQueue = m_LogicalDevice->GetGraphicsQueue();
+		auto device = VulkanGraphicsContext::GetCurrentDevice();
+		auto logicalDevice = device->GetVulkanLogicalDevice();
+		auto graphicsQueue = device->GetGraphicsQueue();
 
 		// Make sure the previous frame is not using this image (i.e. its fence is being waited on)
 		if ( m_ImageInFlightFences[ m_CurrentImageIndex ] != VK_NULL_HANDLE )
@@ -215,7 +216,7 @@ namespace VE
 
 	void VulkanSwapChain::CleanUp()
 	{
-		auto device = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto device = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		glfwWaitEvents();
 		vkDeviceWaitIdle( device );
@@ -333,7 +334,7 @@ namespace VE
 
 	bool VulkanSwapChain::AcquireNextImageIndex()
 	{
-		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto logicalDevice = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		VkResult result = vkAcquireNextImageKHR( logicalDevice, m_SwapChain, UINT64_MAX, m_WaitSemaphores[ m_CurrentFrameIndex ], VK_NULL_HANDLE, &m_CurrentImageIndex );
 		if ( result == VK_ERROR_OUT_OF_DATE_KHR )
@@ -351,7 +352,7 @@ namespace VE
 
 	void VulkanSwapChain::Present()
 	{
-		auto presentQueue = m_LogicalDevice->GetPresentQueue();
+		auto presentQueue = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetPresentQueue();
 
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -379,14 +380,15 @@ namespace VE
 		m_CurrentFrameIndex = ( m_CurrentFrameIndex + 1 ) % Renderer::GetConfig().MaxFramesInFlight;
 	}
 
-	void VulkanSwapChain::CreateSwapChain( uint32_t* width, uint32_t* height, bool vsync )
+	void VulkanSwapChain::CreateSwapChain( uint32_t width, uint32_t height, bool vsync )
 	{
 		m_VSync = vsync;
-		m_Width = *width;
-		m_Height = *height;
+		m_Width = width;
+		m_Height = height;
 
-		auto physicalDevice = m_LogicalDevice->GetPhysicalDevice()->GetVulkanPhysicalDevice();
-		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto device = VulkanGraphicsContext::GetCurrentDevice();
+		auto physicalDevice = device->GetPhysicalDevice()->GetVulkanPhysicalDevice();
+		auto logicalDevice = device->GetVulkanLogicalDevice();
 
 		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport( physicalDevice );
 
@@ -483,7 +485,8 @@ namespace VE
 			createInfo.subresourceRange.layerCount = 1;
 			createInfo.flags = 0;
 
-			VK_CHECK_RESULT( vkCreateImageView( m_LogicalDevice->GetVulkanLogicalDevice(), &createInfo, VulkanGraphicsContext::GetAllocator(), &imageInfo.ImageView ) );
+			const auto device = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
+			VK_CHECK_RESULT( vkCreateImageView( device, &createInfo, VulkanGraphicsContext::GetAllocator(), &imageInfo.ImageView ) );
 		}
 
 		// Create depth attachment
@@ -524,7 +527,7 @@ namespace VE
 
 	void VulkanSwapChain::CreateFramebuffers()
 	{
-		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto logicalDevice = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		m_SwapChainFramebuffers.resize( m_ImageCount );
 
@@ -585,19 +588,19 @@ namespace VE
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto device = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		for ( size_t i = 0; i < frames; i++ )
 		{
-			VK_CHECK_RESULT( vkCreateSemaphore( logicalDevice, &semaphoreInfo, VulkanGraphicsContext::GetAllocator(), &m_WaitSemaphores[ i ] ) );
-			VK_CHECK_RESULT( vkCreateSemaphore( logicalDevice, &semaphoreInfo, VulkanGraphicsContext::GetAllocator(), &m_SignalSemaphores[ i ] ) );
-			VK_CHECK_RESULT( vkCreateFence( logicalDevice, &fenceInfo, VulkanGraphicsContext::GetAllocator(), &m_WaitInFlightFences[ i ] ) );
+			VK_CHECK_RESULT( vkCreateSemaphore( device, &semaphoreInfo, VulkanGraphicsContext::GetAllocator(), &m_WaitSemaphores[ i ] ) );
+			VK_CHECK_RESULT( vkCreateSemaphore( device, &semaphoreInfo, VulkanGraphicsContext::GetAllocator(), &m_SignalSemaphores[ i ] ) );
+			VK_CHECK_RESULT( vkCreateFence( device, &fenceInfo, VulkanGraphicsContext::GetAllocator(), &m_WaitInFlightFences[ i ] ) );
 		}
 	}
 
 	void VulkanSwapChain::CleanUpSwapChain( bool shutdown )
 	{
-		auto device = m_LogicalDevice->GetVulkanLogicalDevice();
+		auto device = VulkanGraphicsContext::Get()->GetLogicalDevice()->GetVulkanLogicalDevice();
 
 		for ( auto framebuffer : m_SwapChainFramebuffers )
 		{
