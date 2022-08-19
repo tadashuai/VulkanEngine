@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform/Vulkan/VulkanDevice.h"
+#include "Platform/Vulkan/VulkanCommandBuffer.h"
 
 #include "Renderer/GraphicsContext.h"
 #include "Renderer/Renderer.h"
@@ -42,6 +43,18 @@ namespace VE
 			return Get()->m_PipelineCache;
 		}
 
+		static std::vector<Ref<VulkanCommandBuffer>>& GetCommandBuffers()
+		{
+			return Get()->m_CommandBuffers;
+		}
+		static Ref<VulkanCommandBuffer>& GetCommandBuffer( uint32_t index )
+		{
+			auto& commandBuffers = Get()->m_CommandBuffers;
+			VE_ASSERT( index < commandBuffers.size() );
+			return commandBuffers[ index ];
+		}
+		static Ref<VulkanCommandBuffer>& GetCurrentCommandBuffer();
+
 	private:
 		void CreateVulkanInstance();
 
@@ -61,5 +74,7 @@ namespace VE
 		VkPipelineCache m_PipelineCache = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 		VkDebugReportCallbackEXT m_DebugReportCallback = VK_NULL_HANDLE;
+
+		std::vector<Ref<VulkanCommandBuffer>> m_CommandBuffers;
 	};
 }

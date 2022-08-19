@@ -49,7 +49,6 @@ namespace VE
 		CreateImageViews();
 		CreateRenderPass();
 		CreateFramebuffers();
-		CreateCommandPool();
 		CreateCommandBuffers();
 		CreateSyncObjects();
 	}
@@ -108,7 +107,7 @@ namespace VE
 		VkResult result = vkWaitForFences( logicalDevice, 1, &m_WaitInFlightFences[ m_CurrentFrameIndex ], VK_TRUE, UINT64_MAX );
 		if ( !VK_RESULT_IS_SUCCESS( result ) )
 		{
-			VE_WARN( "In-flight fence wait failure!" );
+			VE_CRITICAL( "In-flight fence wait failure!" );
 			return false;
 		}
 
@@ -119,17 +118,46 @@ namespace VE
 		// This same semaphore will later be waited on by the queue submission to ensure this image is available.
 		if ( !AcquireNextImageIndex() )
 		{
+			VE_ERROR( "Failed to acquire next image index, booting." );
 			return false;
 		}
 
-		m_RenderPass->GetSpecification().RenderArea.z = ( float )m_Width;
-		m_RenderPass->GetSpecification().RenderArea.w = ( float )m_Height;
+		float width = static_cast< float >( m_Width );
+		float height = static_cast< float >( m_Height );
+
+		m_RenderPass->GetSpecification().RenderArea.z = width;
+		m_RenderPass->GetSpecification().RenderArea.w = height;
+
+		// Begin recording commands.
+		auto commandBuffer = VulkanGraphicsContext::GetCurrentCommandBuffer();
+		commandBuffer->Reset();
+		commandBuffer->Begin();
+
+		// Dynamic state
+		VkViewport viewport;
+		viewport.x = 0.0f;
+		viewport.y = height;
+		viewport.width = width;
+		viewport.height = -height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport( commandBuffer->GetVulkanCommandBuffer(), 0, 1, &viewport );
+
+		// Scissor
+		VkRect2D scissor;
+		scissor.offset.x = scissor.offset.y = 0;
+		scissor.extent.width = m_Width;
+		scissor.extent.height = m_Height;
+		vkCmdSetScissor( commandBuffer->GetVulkanCommandBuffer(), 0, 1, &scissor );
 
 		return true;
 	}
 
 	bool VulkanSwapChain::EndFrame()
 	{
+		auto& commandBuffer = VulkanGraphicsContext::GetCurrentCommandBuffer();
+		commandBuffer->End();
+
 		auto logicalDevice = m_LogicalDevice->GetVulkanLogicalDevice();
 		auto graphicsQueue = m_LogicalDevice->GetGraphicsQueue();
 
@@ -168,7 +196,7 @@ namespace VE
 
 		// Command buffer(s) to be executed.
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffers[ m_CurrentImageIndex ];
+		submitInfo.pCommandBuffers = &( commandBuffer->m_CommandBuffer );
 
 		VkResult result = vkQueueSubmit( graphicsQueue, 1, &submitInfo, m_WaitInFlightFences[ m_CurrentFrameIndex ] );
 		if ( result != VK_SUCCESS )
@@ -176,6 +204,8 @@ namespace VE
 			VE_ERROR( "vkQueueSubmit failed with result: {0}", VKResultToString( result ) );
 			return false;
 		}
+
+		commandBuffer->UpdateSubmitted();
 		// End queue submission
 
 		Present();
@@ -213,8 +243,6 @@ namespace VE
 		m_WaitSemaphores.clear();
 		m_WaitInFlightFences.clear();
 		m_ImageInFlightFences.clear();
-
-		vkDestroyCommandPool( device, m_CommandPool, VulkanGraphicsContext::GetAllocator() );
 
 		vkDestroySurfaceKHR( VulkanGraphicsContext::GetVulkanInstance(), m_Surface, VulkanGraphicsContext::GetAllocator() );
 		m_Surface = nullptr;
@@ -402,10 +430,9 @@ namespace VE
 		VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		std::vector<VkCompositeAlphaFlagBitsKHR> compositeAlphaFlags
 		{
-			VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
 			VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
-			VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+			VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
 		};
 		for ( auto& compositeAlphaFlag : compositeAlphaFlags )
 		{
@@ -485,8 +512,8 @@ namespace VE
 			specification.Format = m_SwapChainImageFormat;
 			specification.RenderArea.x = 0.0f;
 			specification.RenderArea.y = 0.0f;
-			specification.RenderArea.z = ( float )m_Width;
-			specification.RenderArea.w = ( float )m_Height;
+			specification.RenderArea.z = static_cast< float >( m_Width );
+			specification.RenderArea.w = static_cast< float >( m_Height );
 			specification.ClearFlags = RenderPassClearFlags_ColourBuffer;
 			specification.HasPrevRenderPass = false;
 			specification.HasNextRenderPass = false;
@@ -520,27 +547,27 @@ namespace VE
 		}
 	}
 
-	void VulkanSwapChain::CreateCommandPool()
-	{
-		VkCommandPoolCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		createInfo.queueFamilyIndex = m_LogicalDevice->GetPhysicalDevice()->GetQueueFamilyIndices().GraphicsFamilyIndex;
-		createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-		VK_CHECK_RESULT( vkCreateCommandPool( m_LogicalDevice->GetVulkanLogicalDevice(), &createInfo, VulkanGraphicsContext::GetAllocator(), &m_CommandPool ) );
-	}
-
 	void VulkanSwapChain::CreateCommandBuffers()
 	{
-		m_CommandBuffers.resize( m_ImageCount );
+		auto& commandBuffers = VulkanGraphicsContext::GetCommandBuffers();
+		commandBuffers.resize( m_ImageCount );
 
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = m_CommandPool;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = m_ImageCount;
+		CommandBufferSpecification specification = {};
+		specification.CommandPool = VulkanGraphicsContext::GetCurrentDevice()->GetGraphicsCommandPool();
+		specification.Primary = true;
 
-		VK_CHECK_RESULT( vkAllocateCommandBuffers( m_LogicalDevice->GetVulkanLogicalDevice(), &allocInfo, m_CommandBuffers.data() ) );
+		for ( uint32_t i = 0; i < m_ImageCount; i++ )
+		{
+			if ( commandBuffers[ i ] )
+			{
+				commandBuffers[ i ]->Free();
+			}
+			else
+			{
+				commandBuffers[ i ] = Ref<VulkanCommandBuffer>::Create( specification );
+			}
+			commandBuffers[ i ]->Allocate();
+		}
 	}
 
 	void VulkanSwapChain::CreateSyncObjects()
@@ -578,8 +605,13 @@ namespace VE
 		}
 		m_SwapChainFramebuffers.clear();
 
-		vkFreeCommandBuffers( device, m_CommandPool, m_ImageCount, m_CommandBuffers.data() );
-		m_CommandBuffers.clear();
+		auto& commandBuffers = VulkanGraphicsContext::GetCommandBuffers();
+		for ( uint32_t i = 0; i < m_ImageCount; i++ )
+		{
+			if ( commandBuffers[ i ] )
+				commandBuffers[ i ]->Free();
+		}
+		commandBuffers.clear();
 
 		//if ( shutdown )
 		//{

@@ -17,6 +17,8 @@ namespace VE
 		static void Init();
 		static void Shutdown();
 
+		static bool DrawFrame();
+
 		static Ref<GraphicsContext> GetContext()
 		{
 			return Application::Get().GetWindow().GetGraphicsContext();

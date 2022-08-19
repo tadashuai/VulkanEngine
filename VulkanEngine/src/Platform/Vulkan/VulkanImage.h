@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform/Vulkan/VulkanAllocator.h"
+#include "Platform/Vulkan/VulkanCommandBuffer.h"
 
 namespace VE
 {
@@ -36,8 +37,8 @@ namespace VE
 		void CreateView();
 		void Release();
 
-		void InsertImageMemoryBarrier( VkCommandBuffer commandBuffer, VkImageLayout oldLayout, VkImageLayout newLayout );
-		void CopyFromBuffer( VkCommandBuffer commandBuffer, VkBuffer buffer );
+		void InsertImageMemoryBarrier( Ref<VulkanCommandBuffer> commandBuffer, VkImageLayout oldLayout, VkImageLayout newLayout );
+		void CopyFromBuffer( Ref<VulkanCommandBuffer> commandBuffer, VkBuffer buffer );
 
 		uint32_t GetWidth() const
 		{

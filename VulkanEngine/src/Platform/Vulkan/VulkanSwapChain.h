@@ -42,28 +42,23 @@ namespace VE
 			return m_RenderPass;
 		}
 
-		VkFramebuffer GetCurrentFramebuffer()
-		{
-			return GetFramebuffer( m_CurrentImageIndex );
-		}
-
 		uint32_t GetCurrentFrameIndex() const
 		{
 			return m_CurrentFrameIndex;
 		}
+		uint32_t GetCurrentImageIndex() const
+		{
+			return m_CurrentImageIndex;
+		}
+
 		VkFramebuffer GetFramebuffer( uint32_t index )
 		{
 			VE_ASSERT( index < m_SwapChainFramebuffers.size() );
 			return m_SwapChainFramebuffers[ index ];
 		}
-		VkCommandBuffer GetDrawCommandBuffer( uint32_t index )
+		VkFramebuffer GetCurrentFramebuffer()
 		{
-			VE_ASSERT( index < m_CommandBuffers.size() );
-			return m_CommandBuffers[ index ];
-		}
-		VkCommandBuffer GetCurrentDrawCommandBuffer()
-		{
-			return m_CommandBuffers[ m_CurrentFrameIndex ];
+			return GetFramebuffer( m_CurrentImageIndex );
 		}
 
 	private:
@@ -86,7 +81,6 @@ namespace VE
 		void CreateImageViews();
 		void CreateRenderPass();
 		void CreateFramebuffers();
-		void CreateCommandPool();
 		void CreateCommandBuffers();
 		void CreateSyncObjects();
 		void CleanUpSwapChain( bool shutdown = false );
@@ -110,9 +104,6 @@ namespace VE
 		std::vector<Ref<VulkanImage>> m_RenderImages;
 
 		//Ref<VulkanImage> m_DepthAttachment;
-
-		VkCommandPool m_CommandPool = nullptr;
-		std::vector<VkCommandBuffer> m_CommandBuffers;
 
 		std::vector<VkSemaphore> m_WaitSemaphores;
 		std::vector<VkSemaphore> m_SignalSemaphores;

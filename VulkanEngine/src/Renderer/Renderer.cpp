@@ -18,6 +18,20 @@ namespace VE
 	{
 	}
 
+	bool Renderer::DrawFrame()
+	{
+		// TODO: create a render class like backend to let it hold the reference of swapchain and graphics context.
+		if ( Application::Get().GetWindow().GetSwapChain().BeginFrame() )
+		{
+			if ( !Application::Get().GetWindow().GetSwapChain().EndFrame() )
+			{
+				VE_ERROR( "VulkanSwapChain::EndFrame() failed. Application shutting down..." );
+				return false;
+			}
+		}
+		return true;
+	}
+
 	RendererConfig& Renderer::GetConfig()
 	{
 		static RendererConfig config;

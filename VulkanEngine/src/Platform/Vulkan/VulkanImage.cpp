@@ -77,7 +77,7 @@ namespace VE
 		m_ImageInfo.Allocation = VK_NULL_HANDLE;
 	}
 
-	void VulkanImage::InsertImageMemoryBarrier( VkCommandBuffer commandBuffer, VkImageLayout oldLayout, VkImageLayout newLayout )
+	void VulkanImage::InsertImageMemoryBarrier( Ref<VulkanCommandBuffer> commandBuffer, VkImageLayout oldLayout, VkImageLayout newLayout )
 	{
 		auto graphicsFamilyIndex = VulkanGraphicsContext::GetCurrentDevice()->GetPhysicalDevice()->GetQueueFamilyIndices().GraphicsFamilyIndex;
 
@@ -126,10 +126,10 @@ namespace VE
 			return;
 		}
 
-		vkCmdPipelineBarrier( commandBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier );
+		vkCmdPipelineBarrier( commandBuffer->GetVulkanCommandBuffer(), srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier );
 	}
 
-	void VulkanImage::CopyFromBuffer( VkCommandBuffer commandBuffer, VkBuffer buffer )
+	void VulkanImage::CopyFromBuffer( Ref<VulkanCommandBuffer> commandBuffer, VkBuffer buffer )
 	{
 		VkBufferImageCopy bufferImageCopyRegion;
 		bufferImageCopyRegion.bufferOffset = 0;
@@ -142,7 +142,7 @@ namespace VE
 		bufferImageCopyRegion.imageExtent.width = m_Specification.Width;
 		bufferImageCopyRegion.imageExtent.height = m_Specification.Height;
 		bufferImageCopyRegion.imageExtent.depth = 1;
-		vkCmdCopyBufferToImage( commandBuffer, buffer, m_ImageInfo.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferImageCopyRegion );
+		vkCmdCopyBufferToImage( commandBuffer->GetVulkanCommandBuffer(), buffer, m_ImageInfo.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferImageCopyRegion );
 	}
 
 }

@@ -96,9 +96,6 @@ namespace VE
 		}
 		void SetPresentFamilyIndex( uint32_t index );
 
-		VkCommandBuffer BeginCommandBuffer( bool begin, bool compute = false );
-		void EndCommandBuffer( VkCommandBuffer commandBuffer );
-
 		VkDevice GetVulkanLogicalDevice() const
 		{
 			return m_LogicalDevice;
@@ -106,6 +103,15 @@ namespace VE
 		const Ref<VulkanPhysicalDevice>& GetPhysicalDevice() const
 		{
 			return m_PhysicalDevice;
+		}
+
+		VkCommandPool GetGraphicsCommandPool()
+		{
+			return m_GraphicsCommandPool;
+		}
+		VkCommandPool GetComputeCommandPool()
+		{
+			return m_ComputeCommandPool;
 		}
 
 	private:

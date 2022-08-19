@@ -2,6 +2,9 @@
 #include "Platform/Vulkan/VulkanGraphicsContext.h"
 
 #include "Platform/Vulkan/VulkanAllocator.h"
+#include "Platform/Vulkan/VulkanSwapChain.h"
+
+#include "Core/Application.h"
 
 #include <GLFW/glfw3.h>
 
@@ -84,6 +87,11 @@ namespace VE
 		vkDestroyInstance( ms_Instance, ms_Allocator );
 		ms_Instance = VK_NULL_HANDLE;
 		VE_INFO( "Vulkan Instance destroyed." );
+	}
+
+	Ref<VulkanCommandBuffer>& VulkanGraphicsContext::GetCurrentCommandBuffer()
+	{
+		return GetCommandBuffer( Application::Get().GetWindow().GetSwapChain().GetCurrentImageIndex() );
 	}
 
 	void VulkanGraphicsContext::CreateVulkanInstance()

@@ -79,7 +79,7 @@ namespace VE
 
 	bool Application::OnWindowClose( WindowCloseEvent& e )
 	{
-		m_Running = false;
+		Close();
 		return true;
 	}
 
@@ -91,10 +91,9 @@ namespace VE
 
 			if ( !m_Minimized )
 			{
-				if ( m_Window->GetSwapChain().BeginFrame() )
+				if ( !Renderer::DrawFrame() )
 				{
-					//Renderer::WaitCommandQueueExecute();
-					m_Window->GetSwapChain().EndFrame();
+					Close();
 				}
 			}
 		}
